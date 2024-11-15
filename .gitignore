@@ -1,0 +1,9 @@
+# Ignora la carpeta node_modules en todo el proyecto
+**/node_modules
+
+# Ignora los archivos .env en todo el proyecto
+**/.env*
+
+# Ignora los archivos de bloqueo de yarn y package-lock.json
+yarn.lock
+package-lock.json 

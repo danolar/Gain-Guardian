@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Slider } from "@/components/ui/slider"
-import { Wallet, BirdIcon as Owl } from 'lucide-react'
+import { Wallet, BirdIcon as Owl, Plus, X } from 'lucide-react'
 
 // Mock wallet assets
 const mockWalletAssets = [
@@ -30,8 +30,9 @@ export default function TradingInterface() {
   const [walletAddress, setWalletAddress] = useState('')
   const [fromToken, setFromToken] = useState('')
   const [toToken, setToToken] = useState('')
-  const [selectedPercentage, setSelectedPercentage] = useState(10)
-  const [selectedMultiplier, setSelectedMultiplier] = useState(1.5)
+  const [orders, setOrders] = useState([
+    { percentage: 10, multiplier: 1.5 }
+  ])
   const [expiration, setExpiration] = useState('')
 
   const connectWallet = () => {
@@ -44,20 +45,34 @@ export default function TradingInterface() {
     setWalletAddress('')
   }
 
-  const calculateTokenAmount = () => {
+  const calculateTokenAmount = (percentage: number) => {
     const asset = mockWalletAssets.find(a => a.token === fromToken)
     if (!asset) return '0'
-    return ((parseFloat(asset.balance) * selectedPercentage) / 100).toFixed(4)
+    return ((parseFloat(asset.balance) * percentage) / 100).toFixed(4)
   }
 
-  const calculateUsdValue = () => {
+  const calculateUsdValue = (percentage: number, multiplier: number) => {
     const asset = mockWalletAssets.find(a => a.token === fromToken)
     if (!asset) return 0
-    return (asset.valueUSD * selectedPercentage / 100 * selectedMultiplier).toFixed(2)
+    return (asset.valueUSD * percentage / 100 * multiplier).toFixed(2)
+  }
+
+  const addOrder = () => {
+    setOrders([...orders, { percentage: 10, multiplier: 1.5 }])
+  }
+
+  const removeOrder = (index: number) => {
+    setOrders(orders.filter((_, i) => i !== index))
+  }
+
+  const updateOrder = (index: number, field: keyof typeof orders[number], value: number) => {
+    const newOrders = [...orders]
+    newOrders[index][field] = value
+    setOrders(newOrders)
   }
 
   const generateOrder = () => {
-    console.log('Generating order:', { fromToken, toToken, percentage: selectedPercentage, multiplier: selectedMultiplier, expiration })
+    console.log('Generating order:', { fromToken, toToken, orders, expiration })
   }
 
   return (
@@ -147,71 +162,88 @@ export default function TradingInterface() {
               </div>
             </div>
 
-            <div className="space-y-6">
-              <div className="text-center space-y-2">
-                <div className="text-6xl font-bold">{selectedPercentage}%</div>
-                <div className="text-xl">{calculateTokenAmount()} {fromToken}</div>
-              </div>
-
-              <div className="space-y-4">
-                <Label>Percentage</Label>
-                <div className="flex justify-between gap-2">
-                  {percentageOptions.map((percent) => (
-                    <Button
-                      key={percent}
-                      variant={selectedPercentage === percent ? "default" : "outline"}
-                      className="flex-1"
-                      onClick={() => setSelectedPercentage(percent)}
-                    >
-                      {percent}%
+            {orders.map((order, index) => (
+              <Card key={index} className="bg-white p-4">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg font-semibold">Order {index + 1}</h3>
+                  {index > 0 && (
+                    <Button variant="ghost" size="sm" onClick={() => removeOrder(index)}>
+                      <X className="h-4 w-4" />
                     </Button>
-                  ))}
+                  )}
                 </div>
-                <Slider
-                  value={[selectedPercentage]}
-                  onValueChange={(value) => setSelectedPercentage(value[0])}
-                  min={0}
-                  max={100}
-                  step={1}
-                  className="mt-2"
-                />
-              </div>
-
-              <div className="text-center space-y-2">
-                <div className="text-6xl font-bold">{selectedMultiplier}x</div>
-                <div className="text-xl">${calculateUsdValue()}</div>
-              </div>
-
-              <div className="space-y-4">
-                <Label>Multiplier</Label>
-                <div className="flex justify-between gap-2">
-                  {multiplierOptions.map((multiplier) => (
-                    <Button
-                      key={multiplier}
-                      variant={selectedMultiplier === multiplier ? "default" : "outline"}
-                      className="flex-1"
-                      onClick={() => setSelectedMultiplier(multiplier)}
-                    >
-                      {multiplier}x
-                    </Button>
-                  ))}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-4 border-r pr-4">
+                    <div className="flex justify-between items-baseline">
+                      <Label>Percentage</Label>
+                      <div className="text-right">
+                        <div className="text-3xl font-bold">{order.percentage}%</div>
+                        <div className="text-sm">{calculateTokenAmount(order.percentage)} {fromToken}</div>
+                      </div>
+                    </div>
+                    <div className="flex justify-between gap-2 mt-2">
+                      {percentageOptions.map((percent) => (
+                        <Button
+                          key={percent}
+                          variant={order.percentage === percent ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => updateOrder(index, 'percentage', percent)}
+                        >
+                          {percent}%
+                        </Button>
+                      ))}
+                    </div>
+                    <Slider
+                      value={[order.percentage]}
+                      onValueChange={(value) => updateOrder(index, 'percentage', value[0])}
+                      min={0}
+                      max={100}
+                      step={1}
+                      className="mt-2"
+                    />
+                  </div>
+                  <div className="space-y-4 pl-4">
+                    <div className="flex justify-between items-baseline">
+                      <Label>Multiplier</Label>
+                      <div className="text-right">
+                        <div className="text-3xl font-bold">{order.multiplier}x</div>
+                        <div className="text-sm">${calculateUsdValue(order.percentage, order.multiplier)}</div>
+                      </div>
+                    </div>
+                    <div className="flex justify-between gap-2 mt-2">
+                      {multiplierOptions.map((multiplier) => (
+                        <Button
+                          key={multiplier}
+                          variant={order.multiplier === multiplier ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => updateOrder(index, 'multiplier', multiplier)}
+                        >
+                          {multiplier}x
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
-              </div>
+              </Card>
+            ))}
 
-              <div className="space-y-2">
-                <Label>Expiration Time</Label>
-                <Select onValueChange={setExpiration}>
-                  <SelectTrigger className="bg-white border-[#708090] text-[#36454F]">
-                    <SelectValue placeholder="Select time" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1h">1 hour</SelectItem>
-                    <SelectItem value="4h">4 hours</SelectItem>
-                    <SelectItem value="24h">24 hours</SelectItem>
-                    <SelectItem value="7d">7 days</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+            <Button onClick={addOrder} variant="outline" className="w-full mt-4">
+              <Plus className="mr-2 h-4 w-4" /> Add Order
+            </Button>
+
+            <div className="space-y-2">
+              <Label>Expiration Time</Label>
+              <Select onValueChange={setExpiration}>
+                <SelectTrigger className="bg-white border-[#708090] text-[#36454F]">
+                  <SelectValue placeholder="Select time" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1h">1 hour</SelectItem>
+                  <SelectItem value="4h">4 hours</SelectItem>
+                  <SelectItem value="24h">24 hours</SelectItem>
+                  <SelectItem value="7d">7 days</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </CardContent>
           <CardFooter>

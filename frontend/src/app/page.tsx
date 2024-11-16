@@ -1,13 +1,13 @@
 'use client'
 
 import { useState } from 'react'
+import { useAccount } from "wagmi";
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Slider } from "@/components/ui/slider"
-import { Wallet, BirdIcon as Owl, Plus, X } from 'lucide-react'
+import { BirdIcon as Owl, Plus, X } from 'lucide-react'
 
 // Mock wallet assets
 const mockWalletAssets = [
@@ -25,25 +25,14 @@ const percentageOptions = [10, 25, 50, 70, 100]
 // Predefined multipliers
 const multiplierOptions = [1.5, 2, 2.5, 3, 5]
 
-export default function TradingInterface() {
-  const [isWalletConnected, setIsWalletConnected] = useState(false)
-  const [walletAddress, setWalletAddress] = useState('')
+export default function Home() {
+  const { } = useAccount();
   const [fromToken, setFromToken] = useState('')
   const [toToken, setToToken] = useState('')
   const [orders, setOrders] = useState([
     { percentage: 10, multiplier: 1.5 }
   ])
   const [expiration, setExpiration] = useState('')
-
-  const connectWallet = () => {
-    setIsWalletConnected(true)
-    setWalletAddress('0x1234...5678')
-  }
-
-  const disconnectWallet = () => {
-    setIsWalletConnected(false)
-    setWalletAddress('')
-  }
 
   const calculateTokenAmount = (percentage: number) => {
     const asset = mockWalletAssets.find(a => a.token === fromToken)
@@ -83,23 +72,14 @@ export default function TradingInterface() {
             <Owl className="h-8 w-8 text-[#F5F5F5]" />
             <h1 className="text-2xl font-bold">Gains Guardian</h1>
           </div>
-          {isWalletConnected ? (
-            <div className="flex items-center space-x-4">
-              <span className="text-[#708090]">{walletAddress}</span>
-              <Button onClick={disconnectWallet} variant="outline" className="bg-transparent border-[#708090] text-[#708090] hover:bg-[#708090] hover:text-[#F5F5F5]">
-                Disconnect
-              </Button>
-            </div>
-          ) : (
-            <Button onClick={connectWallet} className="bg-[#708090] text-[#F5F5F5] hover:bg-[#5D6D7E]">
-              <Wallet className="mr-2 h-4 w-4" /> Connect Wallet
-            </Button>
-          )}
+          <div className="flex items-center">
+            <w3m-button />
+          </div>
         </div>
       </header>
 
       <main className="container mx-auto p-4 space-y-6">
-        {isWalletConnected && (
+        {/* {isWalletConnected && (
           <Card className="bg-[#F5F5F5] text-[#36454F] shadow-lg">
             <CardHeader>
               <CardTitle>Wallet Assets</CardTitle>
@@ -125,7 +105,7 @@ export default function TradingInterface() {
               </Table>
             </CardContent>
           </Card>
-        )}
+        )} */}
 
         <Card className="bg-[#F5F5F5] text-[#36454F] shadow-lg">
           <CardHeader>
